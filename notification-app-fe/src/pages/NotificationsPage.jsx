@@ -1,86 +1,72 @@
-import { useState } from "react";
-import {
-  Alert,
-  Badge,
-  Box,
-  CircularProgress,
-  Divider,
-  Pagination,
-  Stack,
-  Typography,
-} from "@mui/material";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-
-import { NotificationCard } from "../components/NotificationCard";
-import { NotificationFilter } from "../components/NotificationFilter";
+import { useState, useEffect } from "react";
+import { Container, Pagination, CircularProgress, Typography } from "@mui/material";
+import NotificationFilter from "../components/NotificationFilter";
+import NotificationCard from "../components/NotificationCard";
 import { useNotifications } from "../hooks/useNotifications";
+import { getToken } from "../api/auth";
+import { Log } from "../api/logger";
 
-export function NotificationsPage() {
-  const [filter, setFilter] = useState();
-  const [page, setPage] = useState("1");
+function NotificationsPage() {
+  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState("All");
+  const [viewedIds, setViewedIds] = useState(() => {
+    const saved = localStorage.getItem("viewedIds");
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  const { notifications, totalPages, loading, error } = useNotifications();
+  const limit = 10;
+  const token = getToken();
 
-  const unreadCount = 2;
+  const { notifications, loading, error } = useNotifications(token, page, limit, filter);
 
-  const handleFilterChange = (newFilter) => {
+  useEffect(() => {
+    Log("frontend", "info", "page", "notifications page opened");
+  }, []);
 
-  };
+  function handleFilterChange(newFilter) {
+    setFilter(newFilter);
+    setPage(1);
+    Log("frontend", "info", "page", "filter changed to " + newFilter);
+  }
 
-  const handlePageChange = (_, newPage) => {
+  function handlePageChange(event, value) {
+    setPage(value);
+    Log("frontend", "info", "page", "page changed to " + value);
+  }
 
-  };
+  function handleCardClick(id) {
+    if (!viewedIds.includes(id)) {
+      const updated = [...viewedIds, id];
+      setViewedIds(updated);
+      localStorage.setItem("viewedIds", JSON.stringify(updated));
+      Log("frontend", "info", "page", "notification clicked " + id);
+    }
+  }
 
   return (
-    <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
-        <Badge badgeContent={unreadCount} color="primary" max={99}>
-          <NotificationsIcon sx={{ fontSize: 28 }} />
-        </Badge>
-        <Typography variant="h5" fontWeight={700}>
-          Notifications
-        </Typography>
-      </Stack>
+    <Container sx={{ marginTop: 3 }}>
+      <NotificationFilter filter={filter} onChange={handleFilterChange} />
 
-      <Divider sx={{ mb: 3 }} />
+      {loading && <CircularProgress />}
+      {error && <Typography color="error">{error}</Typography>}
 
-      <Box sx={{ marginBottom: 3 }}>
-        <NotificationFilter value={filter} onChange={handleFilterChange} />
-      </Box>
+      {notifications.map((n) => (
+        <NotificationCard
+          key={n.ID}
+          notification={n}
+          viewed={viewedIds.includes(n.ID)}
+          onClick={() => handleCardClick(n.ID)}
+        />
+      ))}
 
-      {true && (
-        <Box display="flex" justifyContent="center" py={6}>
-          <CircularProgress />
-        </Box>
-      )}
-
-      {!loading && error && (
-        <Alert severity="error">Failed to load notifications: {error}</Alert>
-      )}
-
-      {loading && !error && notifications.length == "0" && (
-        <Alert severity="info">Something message</Alert>
-      )}
-
-      {loading && !error && notifications.length > 0 && (
-        <Stack spacing={1.5}>
-          {notifications.map((n) => (
-            <></>
-          ))}
-        </Stack>
-      )}
-
-      {!loading && (
-        <Box display="flex" justifyContent="center" mt={4}>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-            shape="rounded"
-          />
-        </Box>
-      )}
-    </Box>
+      <Pagination
+        count={5}
+        page={page}
+        onChange={handlePageChange}
+        sx={{ marginTop: 2 }}
+      />
+    </Container>
   );
 }
+
+export default NotificationsPage;

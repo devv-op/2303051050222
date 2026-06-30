@@ -1,27 +1,18 @@
-import { BASE_URL } from "./config.js";
+const LOG_URL = "http://4.224.186.213/evaluation-service/logs";
 
-let token = "";
-
-export function setToken(newToken) {
-    token = newToken;
-}
-
-export function getToken() {
-    return token;
-}
-
-export async function Log(stack, level, packageName, message) {
-    await fetch(`${BASE_URL}/logs`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-            stack,
-            level,
-            package: packageName,
-            message
-        })
+export async function Log(stack, level, pkg, message) {
+  try {
+    await fetch(LOG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        stack,
+        level,
+        package: pkg,
+        message,
+      }),
     });
+  } catch (err) {
+    console.log("logging failed", err);
+  }
 }
