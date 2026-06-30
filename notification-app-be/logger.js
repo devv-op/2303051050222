@@ -6,6 +6,10 @@ export function setToken(newToken) {
     token = newToken;
 }
 
+export function getToken() {
+    return token;
+}
+
 export async function Log(stack, level, packageName, message) {
     await fetch(`${BASE_URL}/logs`, {
         method: "POST",
