@@ -1,0 +1,13 @@
+{
+  "name": "notification-app-be",
+  "version": "1.0.0",
+  "description": "notification system",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "Devvrat Patel",
+  "license": "ISC",
+  "type": "module"
+}
